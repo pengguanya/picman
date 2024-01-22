@@ -6,7 +6,7 @@ import re
 import shutil
 import argparse
 
-def handle_image_file(filename):
+def handle_image_file(filename, verbose):
     try:
         image = Image.open(filename)
         info = image._getexif()
@@ -14,19 +14,30 @@ def handle_image_file(filename):
         print("Could not read image file:", filename)
         return None
 
-    for tag, value in info.items():
-        key = ExifTags.TAGS.get(tag, tag)
-        if key == 'DateTimeOriginal':
-            return value.replace(":", "").replace(" ", "_")
+    if info is not None:
+        for tag, value in info.items():
+            key = ExifTags.TAGS.get(tag, tag)
+            if key == 'DateTimeOriginal':
+                return value.replace(":", "").replace(" ", "_")
+    else:
+        if verbose:
+            print(f"No EXIF data found for image file: {filename}")
+
     return None
 
-def handle_video_file(filename):
+def handle_video_file(filename, verbose):
     parser = createParser(filename)
     metadata = extractMetadata(parser)
-    for line in metadata.exportPlaintext():
-        if line.startswith('- Creation date: '):
-            date_time = line[17:].replace("-", "").replace(":", "").replace(" ", "_")
-            return date_time.split(".")[0]
+
+    if metadata is not None:
+        for line in metadata.exportPlaintext():
+            if line.startswith('- Creation date: '):
+                date_time = line[17:].replace("-", "").replace(":", "").replace(" ", "_")
+                return date_time.split(".")[0]
+    else:
+        if verbose:
+            print(f"No metadata found for video file: {filename}")
+
     return None
 
 def is_valid_format(filename):
@@ -80,9 +91,9 @@ def process_files(path, overwrite=False, output=None, recursive=True, verbose=Fa
                 date_taken = None
                 full_path = os.path.join(dirpath, filename)
                 if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
-                    date_taken = handle_image_file(full_path)
+                    date_taken = handle_image_file(full_path, verbose)
                 elif filename.lower().endswith(('.mp4', '.mov')):
-                    date_taken = handle_video_file(full_path)
+                    date_taken = handle_video_file(full_path, verbose)
 
                 if date_taken is not None and not is_valid_format(filename):
                     new_name = date_taken + os.path.splitext(filename)[1]
