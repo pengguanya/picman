@@ -8,8 +8,8 @@ import argparse
 
 def handle_image_file(filename, verbose):
     try:
-        image = Image.open(filename)
-        info = image._getexif()
+        with Image.open(filename) as image:
+            info = image._getexif()
     except IOError:
         print("Could not read image file:", filename)
         return None
@@ -27,16 +27,17 @@ def handle_image_file(filename, verbose):
 
 def handle_video_file(filename, verbose):
     parser = createParser(filename)
-    metadata = extractMetadata(parser)
+    with parser:
+        metadata = extractMetadata(parser)
 
-    if metadata is not None:
-        for line in metadata.exportPlaintext():
-            if line.startswith('- Creation date: '):
-                date_time = line[17:].replace("-", "").replace(":", "").replace(" ", "_")
-                return date_time.split(".")[0]
-    else:
-        if verbose:
-            print(f"No metadata found for video file: {filename}")
+        if metadata is not None:
+            for line in metadata.exportPlaintext():
+                if line.startswith('- Creation date: '):
+                    date_time = line[17:].replace("-", "").replace(":", "").replace(" ", "_")
+                    return date_time.split(".")[0]
+        else:
+            if verbose:
+                print(f"No metadata found for video file: {filename}")
 
     return None
 
