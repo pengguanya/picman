@@ -63,9 +63,9 @@ def log_unsupported_format(filename, extension, verbose):
 def process_files(path, overwrite=False, output=None, recursive=True, verbose=False):
     path = os.path.expanduser(path)  # Expand ~ if present
     if output is None:
-        output = path
+        output_dir = path
     else:
-        output = os.path.expanduser(output)  # Expand ~ if present
+        output_dir = os.path.expanduser(output)  # Expand ~ if present
 
     for filename in os.listdir(path):
         if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.mp4', '.mov')):
@@ -78,7 +78,7 @@ def process_files(path, overwrite=False, output=None, recursive=True, verbose=Fa
 
             if date_taken is not None and not is_valid_format(filename):
                 new_name = date_taken + os.path.splitext(filename)[1]
-                rename_file(path, filename, new_name, overwrite, output, verbose)
+                rename_file(path, filename, new_name, overwrite, output_dir, verbose)
             elif verbose:
                 print(f'Skipped file {filename}. Date take: {date_taken}. Name already in YYYYMMDD_HHMMSS format: {is_valid_format(filename)}')
         
