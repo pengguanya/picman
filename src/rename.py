@@ -61,36 +61,38 @@ def log_unsupported_format(filename, extension, verbose):
         print(f'Skipped file {filename}. Unsupported file format: {extension}')
 
 def process_files(path, overwrite=False, output=None, recursive=True, verbose=False):
-    path = os.path.expanduser(path)  # Expand ~ if present
+    path = os.path.expanduser(path) 
     if output is None:
-        output_dir = path
+        base_output_dir = path
     else:
-        output_dir = os.path.expanduser(output)  # Expand ~ if present
+        base_output_dir = os.path.expanduser(output)  
 
-    for filename in os.listdir(path):
-        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.mp4', '.mov')):
-            date_taken = None
-            full_path = os.path.join(path, filename)
-            if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
-                date_taken = handle_image_file(full_path)
-            elif filename.lower().endswith(('.mp4', '.mov')):
-                date_taken = handle_video_file(full_path)
+    for dirpath, dirnames, filenames in os.walk(path):
+        if not recursive and dirpath != path:
+            break;
 
-            if date_taken is not None and not is_valid_format(filename):
-                new_name = date_taken + os.path.splitext(filename)[1]
-                rename_file(path, filename, new_name, overwrite, output_dir, verbose)
-            elif verbose:
-                print(f'Skipped file {filename}. Date take: {date_taken}. Name already in YYYYMMDD_HHMMSS format: {is_valid_format(filename)}')
-        
-        elif recursive and os.path.isdir(os.path.join(path, filename)):
-            try:
-                process_files(os.path.join(path, filename), overwrite, output, recursive, verbose)
-            except Exception as e:
-                print("Could not process directory:", filename, " - ", str(e))
+        # Update output directory for each subdirectory
+        relative_dir = os.path.relpath(dirpath, path)        
+        output_dir = os.path.join(base_output_dir, relative_dir)
 
-        else:
-            filename, extension = os.path.splitext(filename.lower())
-            log_unsupported_format(filename, extension, verbose)
+        for filename in filenames:
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.mp4', '.mov')):
+                date_taken = None
+                full_path = os.path.join(dirpath, filename)
+                if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                    date_taken = handle_image_file(full_path)
+                elif filename.lower().endswith(('.mp4', '.mov')):
+                    date_taken = handle_video_file(full_path)
+
+                if date_taken is not None and not is_valid_format(filename):
+                    new_name = date_taken + os.path.splitext(filename)[1]
+                    rename_file(dirpath, filename, new_name, overwrite, output_dir, verbose)
+                elif verbose:
+                    print(f'Skipped file {filename}. Date taken: {date_taken}. Name already in YYYYMMDD_HHMMSS format: {is_valid_format(filename)}')
+
+            else:
+                filename, extension = os.path.splitext(filename.lower())
+                log_unsupported_format(filename, extension, verbose)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Renames photo or media files under a given folder to their date taken.")
