@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "picman"
+version = "0.1.0"
+description = "Collection of tools to handle pictures/media"
+authors = ["Guanya Peng <guanya.peng24@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.11.*"
+pillow = "^10.2.0"
+hachoir = "^3.3.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
